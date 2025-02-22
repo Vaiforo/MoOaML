@@ -48,6 +48,8 @@ class TransportationProblem:
                 "Введите 1, если решить способом северо-зпадного угла, иначе задача будет решена методом минимального элмента: ") == "1":
             self.make_table_nw()
             self.U, self.V = self.solve_uv_nw(self.table, self.U, self.V)
+            print(self.V, self.U)
+            print(self.table)
 
             self.solve_nw(self.table, self.U, self.V, 0)
         # else:
@@ -99,19 +101,6 @@ class TransportationProblem:
     #     print("Задача решена")
     #     return True
 
-    # def solve_uv_nw(self):
-    #     for i in range(self.N):
-    #         if self.table[i].count("-") == self.M - 1:
-    #             self.U[i] = 0
-    #     while self.U.count("-") or self.V.count("-"):
-    #         for i in range(self.N):
-    #             for j in range(self.M):
-    #                 if self.table[i][j] != "-" and (self.U[i] != "-" or self.V[j] != "-"):
-    #                     if self.U[i] != "-":
-    #                         self.V[j] = self.cost_matrix[i][j] - self.U[i]
-    #                     else:
-    #                         self.U[i] = self.cost_matrix[i][j] - self.V[j]
-
     def solve_uv_nw(self, table, U, V) -> (list, list):
         for i in range(self.N):
             if table[i].count("-") == self.M - 1:
@@ -127,19 +116,16 @@ class TransportationProblem:
 
         return U, V
 
-    def find_cycles(self, table, U, V, i_start, j_start, cycles) -> bool:
-        ...
-
+    # def find_cycles(self, table, U, V, i_start, j_start, cycles) -> bool:
+    #     ...
 
     def solve_nw(self, table, U, V, cycles):
         for i in range(self.N):
             for j in range(self.M):
                 if table[i][j] == "-":
                     if U[i] + V[j] > self.cost_matrix[i][j]:
-                        self.find_cycles(table, U, V, i, j, cycles)
-
-
-
+                        ...
+                        # self.find_cycles(table, U, V, i, j, cycles)
 
 
 shops = [7, 8, 4, 11, 30]
