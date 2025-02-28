@@ -1,11 +1,14 @@
 import sys
-
 import numpy as np
 
 
 class TransportationProblem:
     def __init__(self, shops=None, warehouses=None, cost_matrix=None):
-        self.cycles = 0
+        self.best_cycles_count = 10 ** 99
+        self.best_len_all_cycles = 10 ** 99
+        self.best_way = []
+
+        self.cycles = []
 
         if shops:
             self.shops = shops
@@ -51,7 +54,7 @@ class TransportationProblem:
             print(self.V, self.U)
             print(self.table)
 
-            self.solve_nw(self.table, self.U, self.V, 0)
+            self.solve_nw(self.table, self.U, self.V, [])
         # else:
         # self.make_table_me()
 
@@ -92,15 +95,6 @@ class TransportationProblem:
 
         self.print_tabel()
 
-    # def check_ready(self) -> bool:
-    #     for i in range(self.N):
-    #         for j in range(self.M):
-    #             if self.table[i][j] == "-":
-    #                 if self.U[i] + self.V[j] > self.cost_matrix[i][j]:
-    #                     return False
-    #     print("Задача решена")
-    #     return True
-
     def solve_uv_nw(self, table, U, V) -> (list, list):
         for i in range(self.N):
             if table[i].count("-") == self.M - 1:
@@ -116,16 +110,59 @@ class TransportationProblem:
 
         return U, V
 
-    # def find_cycles(self, table, U, V, i_start, j_start, cycles) -> bool:
-    #     ...
+    def find_cycles(self, table, cycle, sign):
+        i, j = cycle[-1]
+        if sign == "+":
+            while j != -1:
+                j -= 1
+                if table[i][j] != "-" and [i, j] not in cycle[1:]:
+                    self.find_cycles(table, cycle + [[i, j]], "-")
+            i, j = cycle[-1]
+            while j != self.M:
+                j += 1
+                if table[i][j] != "-" and [i, j] not in cycle[1:]:
+                    self.find_cycles(table, cycle + [[i, j]], "-")
+        elif sign == "-":
+            while i != -1:
+                i -= 1
+                if [i, j] == cycle[0]:
+                    self.cycles += [cycle]
+                if table[i][j] != "-" and [i, j] not in cycle:
+                    self.find_cycles(table, cycle + [[i, j]], "+")
+            i, j = cycle[-1]
+            while i != self.N:
+                i += 1
+                if [i, j] == cycle[0]:
+                    self.cycles += [cycle]
+                if table[i][j] != "-" and [i, j] not in cycle:
+                    self.find_cycles(table, cycle + [[i, j]], "-")
 
-    def solve_nw(self, table, U, V, cycles):
+    def solve_nw(self, table, U, V, last_cycles):
+        self.cycles = []
         for i in range(self.N):
             for j in range(self.M):
                 if table[i][j] == "-":
                     if U[i] + V[j] > self.cost_matrix[i][j]:
-                        ...
-                        # self.find_cycles(table, U, V, i, j, cycles)
+                        self.find_cycles(table, [], "+")
+
+        if not self.cycles:
+            len_last_cycles = len(last_cycles)
+            len_all_steps_last_cycles = sum(map(len, last_cycles))
+
+            if len_last_cycles < self.best_cycles_count:
+                self.best_cycles_count = len_last_cycles
+                self.best_len_all_cycles = len_all_steps_last_cycles
+                self.best_way = last_cycles
+
+            if len_last_cycles == self.best_cycles_count:
+                if len_all_steps_last_cycles < self.best_len_all_cycles:
+                    self.best_cycles_count = len_last_cycles
+                    self.best_len_all_cycles = len_all_steps_last_cycles
+                    self.best_way = last_cycles
+
+        for cycle in self.cycles:
+            new_table = table[:]
+            min_elem = min(table[i][j] for i, j in cycle[1::2])
 
 
 shops = [7, 8, 4, 11, 30]
