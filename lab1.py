@@ -1,5 +1,9 @@
 import sys
+from sys import setrecursionlimit
+
 import numpy as np
+
+setrecursionlimit(1000000)
 
 
 class TransportationProblem:
@@ -50,11 +54,11 @@ class TransportationProblem:
         if input(
                 "Введите 1, если решить способом северо-зпадного угла, иначе задача будет решена методом минимального элмента: ") == "1":
             self.make_table_nw()
-            self.U, self.V = self.solve_uv_nw(self.table, self.U, self.V)
+            U, V = self.solve_uv_nw(self.table, self.U, self.V)
             print(self.V, self.U)
             print(self.table)
 
-            self.solve_nw(self.table, self.U, self.V, [])
+            self.solve_nw(self.table, U, V, [])
         # else:
         # self.make_table_me()
 
@@ -112,30 +116,33 @@ class TransportationProblem:
 
     def find_cycles(self, table, cycle, sign):
         i, j = cycle[-1]
+        j -= 1
         if sign == "+":
-            while j != -1:
+            while j > -1:
+                if table[i][j] != "-" and [i, j] not in cycle[1:]:
+                    self.find_cycles(table, cycle + [[i, j]], "-")
                 j -= 1
-                if table[i][j] != "-" and [i, j] not in cycle[1:]:
-                    self.find_cycles(table, cycle + [[i, j]], "-")
             i, j = cycle[-1]
+            j += 1
             while j != self.M:
-                j += 1
                 if table[i][j] != "-" and [i, j] not in cycle[1:]:
                     self.find_cycles(table, cycle + [[i, j]], "-")
+                j += 1
         elif sign == "-":
-            while i != -1:
-                i -= 1
+            while i > -1:
                 if [i, j] == cycle[0]:
                     self.cycles += [cycle]
                 if table[i][j] != "-" and [i, j] not in cycle:
                     self.find_cycles(table, cycle + [[i, j]], "+")
+                i -= 1
             i, j = cycle[-1]
+            i += 1
             while i != self.N:
-                i += 1
                 if [i, j] == cycle[0]:
                     self.cycles += [cycle]
                 if table[i][j] != "-" and [i, j] not in cycle:
                     self.find_cycles(table, cycle + [[i, j]], "-")
+                i += 1
 
     def solve_nw(self, table, U, V, last_cycles):
         self.cycles = []
@@ -143,7 +150,7 @@ class TransportationProblem:
             for j in range(self.M):
                 if table[i][j] == "-":
                     if U[i] + V[j] > self.cost_matrix[i][j]:
-                        self.find_cycles(table, [], "+")
+                        self.find_cycles(table, [[i, j]], "+")
 
         if not self.cycles:
             len_last_cycles = len(last_cycles)
@@ -163,6 +170,17 @@ class TransportationProblem:
         for cycle in self.cycles:
             new_table = table[:]
             min_elem = min(table[i][j] for i, j in cycle[1::2])
+            for i, j in cycle[1::2]:
+                new_table[i][j] -= min_elem
+                if new_table[i][j] == 0:
+                    new_table[i][j] = "-"
+            for i, j in cycle[::2]:
+                if new_table[i][j] == "-":
+                    new_table[i][j] = min_elem
+                else:
+                    new_table[i][j] += min_elem
+            U_new, V_new = self.solve_uv_nw(new_table, self.U, self.V)
+            self.solve_nw(new_table, U_new, V_new, cycle)
 
 
 shops = [7, 8, 4, 11, 30]
