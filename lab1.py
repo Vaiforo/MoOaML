@@ -7,6 +7,9 @@ setrecursionlimit(1000000)
 
 
 class TransportationProblem:
+    def solve(self):
+        ...
+
     def __init__(self, shops=None, warehouses=None, cost_matrix=None):
         self.best_cycles_count = 10 ** 99
         self.best_len_all_cycles = 10 ** 99
@@ -42,8 +45,8 @@ class TransportationProblem:
                 self.cost_matrix += row
 
         self.cost_matrix = np.array(self.cost_matrix).reshape(self.N, self.M)
-        print("Полученная матрица:")
-        np.savetxt(sys.stdout, self.cost_matrix, fmt="%3d")
+        # print("Полученная матрица:")
+        # np.savetxt(sys.stdout, self.cost_matrix, fmt="%3d")
 
         self.check_balance()
 
@@ -51,19 +54,30 @@ class TransportationProblem:
         self.U = ["-" for _ in range(self.N)]
         self.V = ["-" for _ in range(self.M)]
 
-        if input(
-                "Введите 1, если решить способом северо-зпадного угла, иначе задача будет решена методом минимального элмента: ") == "1":
-            self.make_table_nw()
-            U, V = self.solve_uv_nw(self.table, self.U, self.V)
-            print(self.V, self.U)
-            print(self.table)
+        self.printer()
 
-            self.solve_nw(self.table, U, V, [])
-        # else:
-        # self.make_table_me()
+        self.solve()
 
     def print_tabel(self):
         print(*self.table, sep="\n")
+
+    def printer(self):
+        with open("test.txt", "r", encoding="utf8") as f:
+            while f:
+                row = [x for x in f.readline().split()]
+                col = [x for x in f.readline().split()]
+                row1 = [x for x in f.readline().split()]
+                row2 = [x for x in f.readline().split()]
+                row3 = [x for x in f.readline().split()]
+                row4 = [x for x in f.readline().split()]
+                if not col:
+                    break
+                print()
+                print(*row1, col[0])
+                print(*row2, col[1])
+                print(*row3, col[2])
+                print(*row4, col[3])
+                print(*row)
 
     def check_balance(self):
         if sum(self.shops) != sum(self.warehouses):
